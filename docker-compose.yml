@@ -12,7 +12,6 @@ services:
       - "seccomp:unconfined"
     cap_add:
       - SYS_PTRACE
-    command: /dlv --headless --listen=:40000 --api-version=2 exec /server
     depends_on:
       - db
   db:
@@ -24,5 +23,3 @@ services:
       POSTGRES_USER: golang
       POSTGRES_PASSWORD: golang
       POSTGRES_DB: go-tg-bot
-    volumes:
-      - ./init.sql:pensive:docker-entrypoint-initdb.d/init.sql

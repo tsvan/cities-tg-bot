@@ -1,11 +1,11 @@
 package main
 
-import "app/configs"
-
 import (
+	"app/configs"
 	"log"
 	"net/http"
-	"github.com/go-telegram-bot-api/telegram-bot-api"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 func main() {
@@ -30,7 +30,7 @@ func main() {
 		log.Printf("Telegram callback failed: %s", info.LastErrorMessage)
 	}
 	updates := bot.ListenForWebhook("/" + bot.Token)
-	go http.ListenAndServeTLS("0.0.0.0:8443", "configs/cert.pem", "configs/key.pem", nil)
+	go http.ListenAndServeTLS("0.0.0.0:8443", "certs/cert.pem", "certs/key.pem", nil)
 
 	for update := range updates {
 		log.Printf("%+v\n", update)
