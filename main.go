@@ -2,37 +2,67 @@ package main
 
 import (
 	"app/configs"
-	"log"
+	"bytes"
+	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
-
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
+type webhookReqBody struct {
+	Message struct {
+		Text string `json:"text"`
+		Chat struct {
+			ID int64 `json:"id"`
+		} `json:"chat"`
+	} `json:"message"`
+}
+
+type sendMessageReqBody struct {
+	ChatID int64  `json:"chat_id"`
+	Text   string `json:"text"`
+}
+
+func Handler(res http.ResponseWriter, req *http.Request) {
+	// First, decode the JSON response body
+	body := &webhookReqBody{}
+	if err := json.NewDecoder(req.Body).Decode(body); err != nil {
+		fmt.Println("could not decode request body", err)
+		return
+	}
+
+	if err := sendTest(body.Message.Chat.ID); err != nil {
+		fmt.Println("error in sending reply:", err)
+		return
+	}
+
+	fmt.Println("reply sent")
+}
+
+func sendTest(chatID int64) error {
+	// Create the request body struct
+	reqBody := &sendMessageReqBody{
+		ChatID: chatID,
+		Text:   "test",
+	}
+	// Create the JSON body from the struct
+	reqBytes, err := json.Marshal(reqBody)
+	if err != nil {
+		return err
+	}
+
+	// Send a post request with your token
+	res, err := http.Post("https://api.telegram.org/bot"+configs.TOKEN+"/sendMessage", "application/json", bytes.NewBuffer(reqBytes))
+	if err != nil {
+		return err
+	}
+	if res.StatusCode != http.StatusOK {
+		return errors.New("unexpected status" + res.Status)
+	}
+
+	return nil
+}
+
 func main() {
-	bot, err := tgbotapi.NewBotAPI(configs.TOKEN)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	bot.Debug = true
-
-	log.Printf("Authorized on account %s", bot.Self.UserName)
-
-	_, err = bot.SetWebhook(tgbotapi.NewWebhookWithCert("https://www.google.com:8443/"+bot.Token, "cert.pem"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	info, err := bot.GetWebhookInfo()
-	if err != nil {
-		log.Fatal(err)
-	}
-	if info.LastErrorDate != 0 {
-		log.Printf("Telegram callback failed: %s", info.LastErrorMessage)
-	}
-	updates := bot.ListenForWebhook("/" + bot.Token)
-	go http.ListenAndServeTLS("0.0.0.0:8443", "certs/cert.pem", "certs/key.pem", nil)
-
-	for update := range updates {
-		log.Printf("%+v\n", update)
-	}
+	http.ListenAndServe(":8000", http.HandlerFunc(Handler))
 }
