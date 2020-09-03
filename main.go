@@ -2,6 +2,7 @@ package main
 
 import (
 	"app/configs"
+	"app/types"
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -9,27 +10,15 @@ import (
 	"net/http"
 )
 
-type webhookReqBody struct {
-	Message struct {
-		Text string `json:"text"`
-		Chat struct {
-			ID int64 `json:"id"`
-		} `json:"chat"`
-	} `json:"message"`
-}
-
-type sendMessageReqBody struct {
-	ChatID int64  `json:"chat_id"`
-	Text   string `json:"text"`
-}
-
+//Handler handle webhook from tg
 func Handler(res http.ResponseWriter, req *http.Request) {
 	// First, decode the JSON response body
-	body := &webhookReqBody{}
+	body := &types.WebhookReqBody{}
 	if err := json.NewDecoder(req.Body).Decode(body); err != nil {
 		fmt.Println("could not decode request body", err)
 		return
 	}
+	fmt.Println("message", body)
 
 	if err := sendTest(body.Message.Chat.ID); err != nil {
 		fmt.Println("error in sending reply:", err)
@@ -41,7 +30,7 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 
 func sendTest(chatID int64) error {
 	// Create the request body struct
-	reqBody := &sendMessageReqBody{
+	reqBody := &types.SendMessageReqBody{
 		ChatID: chatID,
 		Text:   "test",
 	}
