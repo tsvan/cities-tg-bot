@@ -5,7 +5,6 @@ services:
     build: ./
     ports:
       - "8000:8000"
-      - "40000:40000"
     environment:
       DD_DB_HOST: db
     security_opt:
@@ -22,4 +21,15 @@ services:
     environment:
       POSTGRES_USER: golang
       POSTGRES_PASSWORD: golang
-      POSTGRES_DB: go-tg-bot
+      POSTGRES_DB: golang
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin_container
+    environment:
+      PGADMIN_DEFAULT_EMAIL: golang
+      PGADMIN_DEFAULT_PASSWORD: golang
+    depends_on:
+      - db
+    ports:
+      - "5050:80"
+    restart: unless-stopped

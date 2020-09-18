@@ -3,6 +3,7 @@ package main
 import (
 	"app/configs"
 	"app/types"
+	"app/db"
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -53,5 +54,6 @@ func sendTest(chatID int64) error {
 }
 
 func main() {
+	db.Connect()
 	http.ListenAndServe(":8000", http.HandlerFunc(Handler))
 }
