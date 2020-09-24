@@ -55,5 +55,7 @@ func sendTest(chatID int64) error {
 
 func main() {
 	db.Connect()
+	db.CreateTables()
+	db.Test()
 	http.ListenAndServe(":8000", http.HandlerFunc(Handler))
 }

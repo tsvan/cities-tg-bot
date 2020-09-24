@@ -1,10 +1,10 @@
 package configs
 
 const (
-	HOST = "localhost"
-	PORT = ""
+	HOST = "172.18.0.2"
+	PORT = 5432
 	TG_API_URL = ""
-	DB_NAME = "go-tg-bot"
+	DB_NAME = "golang"
 	DB_USER = "golang"
 	DB_PASSWORD = "golang"
 )
