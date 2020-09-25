@@ -21,10 +21,12 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 	}
 	fmt.Println("message", body)
 
+
 	if err := sendTest(body.Message.Chat.ID); err != nil {
 		fmt.Println("error in sending reply:", err)
 		return
 	}
+	db.AddMessage(body.Message.Chat.ID, body.Message.Text)
 
 	fmt.Println("reply sent")
 }
@@ -54,8 +56,6 @@ func sendTest(chatID int64) error {
 }
 
 func main() {
-	db.Connect()
 	db.CreateTables()
-	db.Test()
 	http.ListenAndServe(":8000", http.HandlerFunc(Handler))
 }
