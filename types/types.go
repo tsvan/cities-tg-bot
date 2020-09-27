@@ -17,3 +17,11 @@ type SendMessageReqBody struct {
 	ChatID int64  `json:"chat_id"`
 	Text   string `json:"text"`
 }
+
+type MessageModel struct {
+	ID int64
+	Message string
+	ChatID int64
+	CreateDate string
+	SendDate string
+}

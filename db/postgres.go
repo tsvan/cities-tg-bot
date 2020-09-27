@@ -2,9 +2,9 @@ package db
 
 import (
 	"app/configs"
+	"app/types"
 	"database/sql"
 	"fmt"
-	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -42,11 +42,10 @@ func CreateTables() {
 }
 
 //AddMessage - save user message from tg to database
-func AddMessage(chatID int64, message string) {
-	currentTime := time.Now().Format("2006-01-02 15:04:05")
+func AddMessage(model types.MessageModel) {
 	query := fmt.Sprintf(`INSERT INTO public.messages(
 		message, chat_id, create_date, send_date)
-	   VALUES ('%s', '%d', '%s', '%s');`, message, chatID, currentTime, currentTime)
+	   VALUES ('%s', '%d', '%s', '%s');`, model.Message, model.ChatID, model.CreateDate, model.SendDate)
 	db := Connect()
 	result, err := db.Exec(query)
 	if err != nil {

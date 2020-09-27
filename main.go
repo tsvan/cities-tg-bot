@@ -1,12 +1,10 @@
 package main
 
 import (
-	"app/configs"
 	"app/types"
 	"app/db"
-	"bytes"
+	"app/messages"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 )
@@ -20,39 +18,16 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	fmt.Println("message", body)
+	messages.HandleMessage(body)
 
 
-	if err := sendTest(body.Message.Chat.ID); err != nil {
-		fmt.Println("error in sending reply:", err)
-		return
-	}
-	db.AddMessage(body.Message.Chat.ID, body.Message.Text)
+	//if err := sendTest(body.Message.Chat.ID); err != nil {
+	//	fmt.Println("error in sending reply:", err)
+	//	return
+	//}
+	//db.AddMessage(body.Message.Chat.ID, body.Message.Text)
 
 	fmt.Println("reply sent")
-}
-
-func sendTest(chatID int64) error {
-	// Create the request body struct
-	reqBody := &types.SendMessageReqBody{
-		ChatID: chatID,
-		Text:   "test",
-	}
-	// Create the JSON body from the struct
-	reqBytes, err := json.Marshal(reqBody)
-	if err != nil {
-		return err
-	}
-
-	// Send a post request with your token
-	res, err := http.Post("https://api.telegram.org/bot"+configs.TOKEN+"/sendMessage", "application/json", bytes.NewBuffer(reqBytes))
-	if err != nil {
-		return err
-	}
-	if res.StatusCode != http.StatusOK {
-		return errors.New("unexpected status" + res.Status)
-	}
-
-	return nil
 }
 
 func main() {
