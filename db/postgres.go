@@ -39,6 +39,7 @@ func CreateTables() {
 		panic(err)
 	}
 	fmt.Println(result)
+	defer db.Close()
 }
 
 //AddMessage - save user message from tg to database
@@ -52,4 +53,79 @@ func AddMessage(model types.MessageModel) {
 		panic(err)
 	}
 	fmt.Println(result)
+	defer db.Close()
+}
+
+func GetMessagesToSend() {
+	db := Connect()
+	rows, err := db.Query("select * from public.messages")
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+	messages := []types.MessageModel{}
+
+	for rows.Next() {
+		message := types.MessageModel{}
+		err := rows.Scan(&message.ID, &message.Message, &message.ChatID, &message.CreateDate, &message.SendDate)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		messages = append(messages, message)
+	}
+	for _, message := range messages {
+		fmt.Println(message.ID, message.Message, message.SendDate)
+	}
+	defer db.Close()
+
+}
+
+func GetCityByName(name string) (types.CityModel, error) {
+	db := Connect()
+	query := fmt.Sprintf("select * from public.geo WHERE city='%s'", name)
+	fmt.Println(query)
+	row := db.QueryRow("select * from public.geo WHERE city=$1", name)
+	city := types.CityModel{}
+
+	err := row.Scan(&city.ID, &city.CountryEn, &city.RegionEn, &city.CityEn, &city.Country, &city.Region, &city.City, &city.Lat, &city.Lng, &city.Population)
+	if err != nil {
+		fmt.Println("city not found")
+		return city, err
+	}
+	fmt.Println(city.ID, city.City)
+	
+	defer db.Close()
+	return city, nil
+}
+
+func GetCitiesByLetter(letter string) []types.CityModel {
+	db := Connect()
+	fmt.Println("letter", letter)
+	query := fmt.Sprintf("select * from public.geo WHERE LOWER(city) LIKE '%s%s' LIMIT 2", letter, "%")
+	fmt.Println(query)
+
+	rows, err := db.Query(query)
+	if err != nil {
+		fmt.Println("cities not found")
+	}
+	defer rows.Close()
+	cities := []types.CityModel{}
+
+	for rows.Next() {
+		city := types.CityModel{}
+		err := rows.Scan(&city.ID, &city.CountryEn, &city.RegionEn, &city.CityEn, &city.Country, &city.Region, &city.City, &city.Lat, &city.Lng, &city.Population)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		cities = append(cities, city)
+	}
+	for _, city := range cities {
+		fmt.Println(city.ID, city.City, city.Region)
+	}
+
+	defer db.Close()
+	return cities
+
 }

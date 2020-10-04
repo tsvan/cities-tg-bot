@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"fmt"
 )
 
 const (
@@ -23,8 +24,20 @@ func HandleMessage(res *types.WebhookReqBody) {
 		sendMessage(res.Message.Chat.ID, HELP_MESSAGE)
 		return
 	} else {
-		messageModel := parseMessage(res)
-		db.AddMessage(messageModel)
+		//messageModel := parseMessage(res)
+		//db.AddMessage(messageModel)
+		fmt.Println("1")
+
+		city, err :=db.GetCityByName(res.Message.Text)
+		if err!=nil {
+			fmt.Println("нету города такого")
+		} else {
+
+			fmt.Println(city.City, city.Region)
+			r := []rune(city.City)
+			cities := db.GetCitiesByLetter(string(r[len(r)-1:]))
+			sendMessage(res.Message.Chat.ID, cities[0].City)
+		}
 		return
 	}
 }

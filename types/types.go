@@ -25,3 +25,16 @@ type MessageModel struct {
 	CreateDate string
 	SendDate string
 }
+
+type CityModel struct {
+	ID int64
+	CountryEn string
+	RegionEn string
+	CityEn string
+	Country string
+	Region string
+	City string
+	Lat string
+	Lng string
+	Population int64
+}
