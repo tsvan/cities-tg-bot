@@ -5,6 +5,7 @@ import (
 	"app/types"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	_ "github.com/lib/pq"
 )
@@ -83,9 +84,8 @@ func GetMessagesToSend() {
 
 func GetCityByName(name string) (types.CityModel, error) {
 	db := Connect()
-	query := fmt.Sprintf("select * from public.geo WHERE city='%s'", name)
-	fmt.Println(query)
-	row := db.QueryRow("select * from public.geo WHERE city=$1", name)
+
+	row := db.QueryRow("select * from public.geo WHERE LOWER(city)=$1", strings.ToLower(name))
 	city := types.CityModel{}
 
 	err := row.Scan(&city.ID, &city.CountryEn, &city.RegionEn, &city.CityEn, &city.Country, &city.Region, &city.City, &city.Lat, &city.Lng, &city.Population)
@@ -99,33 +99,23 @@ func GetCityByName(name string) (types.CityModel, error) {
 	return city, nil
 }
 
-func GetCitiesByLetter(letter string) []types.CityModel {
+func GetRandomCitiesByLetter(letter string) (types.CityModel, error) {
 	db := Connect()
 	fmt.Println("letter", letter)
-	query := fmt.Sprintf("select * from public.geo WHERE LOWER(city) LIKE '%s%s' LIMIT 2", letter, "%")
+	query := fmt.Sprintf("select * from public.geo WHERE LOWER(city) LIKE '%s%s' ORDER BY random() LIMIT 1", strings.ToLower(letter), "%")
 	fmt.Println(query)
 
-	rows, err := db.Query(query)
+	row := db.QueryRow(query)
+	city := types.CityModel{}
+
+	err := row.Scan(&city.ID, &city.CountryEn, &city.RegionEn, &city.CityEn, &city.Country, &city.Region, &city.City, &city.Lat, &city.Lng, &city.Population)
 	if err != nil {
-		fmt.Println("cities not found")
+		fmt.Println("no random city")
+		return city, err
 	}
-	defer rows.Close()
-	cities := []types.CityModel{}
-
-	for rows.Next() {
-		city := types.CityModel{}
-		err := rows.Scan(&city.ID, &city.CountryEn, &city.RegionEn, &city.CityEn, &city.Country, &city.Region, &city.City, &city.Lat, &city.Lng, &city.Population)
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
-		cities = append(cities, city)
-	}
-	for _, city := range cities {
-		fmt.Println(city.ID, city.City, city.Region)
-	}
-
+	fmt.Println(city.ID, city.City)
+	
 	defer db.Close()
-	return cities
+	return city, nil
 
 }

@@ -16,6 +16,8 @@ import (
 const (
 	HELP_MESSAGE = `Бот напоминаний о событии. Введите сообщение, затем время напоминания. Пример:
 	Текст сообщения. 2020-10-22 10:10`
+	NO_CITY_MESSAGE = "Нет такого города"
+	NO_CITIES_FOUND_MESSAGE = "Городов не найдено"
 )
 
 
@@ -24,19 +26,19 @@ func HandleMessage(res *types.WebhookReqBody) {
 		sendMessage(res.Message.Chat.ID, HELP_MESSAGE)
 		return
 	} else {
-		//messageModel := parseMessage(res)
-		//db.AddMessage(messageModel)
-		fmt.Println("1")
-
 		city, err :=db.GetCityByName(res.Message.Text)
 		if err!=nil {
 			fmt.Println("нету города такого")
+			sendMessage(res.Message.Chat.ID, NO_CITY_MESSAGE)
 		} else {
-
 			fmt.Println(city.City, city.Region)
 			r := []rune(city.City)
-			cities := db.GetCitiesByLetter(string(r[len(r)-1:]))
-			sendMessage(res.Message.Chat.ID, cities[0].City)
+			randomCity, err := db.GetRandomCitiesByLetter(string(r[len(r)-1:]))
+			if err == nil  {
+				sendMessage(res.Message.Chat.ID, randomCity.City)
+			} else {
+				sendMessage(res.Message.Chat.ID, NO_CITIES_FOUND_MESSAGE)
+			}
 		}
 		return
 	}
