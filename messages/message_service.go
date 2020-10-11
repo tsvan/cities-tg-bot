@@ -2,15 +2,15 @@ package messages
 
 import (
 	"app/configs"
-	"app/db"
 	"app/types"
+	"app/db"
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
+	"fmt"
 )
 
 const (
@@ -20,26 +20,59 @@ const (
 	Проверки на соответствие города названого ботом с городом названным вами нет, каждым сообщением можно начинать игру заново `
 	NO_CITY_MESSAGE = "Нет такого города"
 	NO_CITIES_FOUND_MESSAGE = "Городов не найдено"
+	INFO_NOT_FOUND = "Информация не найдена"
 )
 
+
 func HandleMessage(res *types.WebhookReqBody) {
-	switch res.Message.Text {
-	case "/help":
-		sendMessage(res.Message.Chat.ID, HELP_MESSAGE)
-	default:
-		city, err := db.GetCityByName(res.Message.Text)
-		if err != nil {
-			fmt.Println("нету города такого")
-			sendMessage(res.Message.Chat.ID, NO_CITY_MESSAGE)
+
+	if (len([]rune(res.Message.Text)) <= 1) {
+		return
+	}
+	if string([]rune(res.Message.Text)[0]) == "/" {
+		handleCommands(res)
+		return
+	}
+
+	city, err :=db.GetCityByName(res.Message.Text)
+	if err!=nil {
+		fmt.Println("нету города такого")
+		sendMessage(res.Message.Chat.ID, NO_CITY_MESSAGE)
+	} else {
+		randomCity, err := db.GetRandomCitiesByLetter(getLetter(city.City))
+		if err == nil  {
+			sendMessage(res.Message.Chat.ID, randomCity.City)
 		} else {
-			randomCity, err := db.GetRandomCitiesByLetter(getLetter(city.City))
-			if err == nil {
-				sendMessage(res.Message.Chat.ID, randomCity.City)
-			} else {
-				sendMessage(res.Message.Chat.ID, NO_CITIES_FOUND_MESSAGE)
-			}
+			sendMessage(res.Message.Chat.ID, NO_CITIES_FOUND_MESSAGE)
 		}
 	}
+	return
+}
+
+func handleCommands(res *types.WebhookReqBody) {
+	tmp := strings.Split(res.Message.Text, " ")
+	command:= tmp[0]
+	param:= strings.Join(tmp[1:], " ")
+
+	switch command {
+		case "/help",("/help@"+configs.BOT_NAME) :
+			sendMessage(res.Message.Chat.ID, HELP_MESSAGE)
+		case "/start",("/start@"+configs.BOT_NAME) :
+			sendMessage(res.Message.Chat.ID, "start")
+		case "/stop",("/stop@"+configs.BOT_NAME) :
+			sendMessage(res.Message.Chat.ID, "stop")
+		case "/info",("/info@"+configs.BOT_NAME) :
+			city, err :=db.GetCityByName(param)
+			if err!=nil {
+				sendMessage(res.Message.Chat.ID, INFO_NOT_FOUND)
+			} else {
+				sendMessage(res.Message.Chat.ID, 
+					fmt.Sprintf("Страна: %s.\nРегион: %s.\nНаселение: %d." , city.Country, city.Region, city.Population))
+			}
+		default:
+			sendMessage(res.Message.Chat.ID, "command not found")
+	}
+
 }
 
 func parseMessage(res *types.WebhookReqBody) types.MessageModel {
@@ -83,6 +116,6 @@ func getLetter(word string) string {
 	word = replacer.Replace(word)
 	fmt.Println(word)
 	r := []rune(word)
-	letter := string(r[len(r)-1:])
+	letter:= string(r[len(r)-1:])
 	return letter
 }

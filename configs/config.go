@@ -7,4 +7,5 @@ const (
 	DB_NAME = "golang"
 	DB_USER = "golang"
 	DB_PASSWORD = "golang"
+	BOT_NAME = "woappbot"
 )
