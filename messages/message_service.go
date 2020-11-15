@@ -33,6 +33,15 @@ func HandleMessage(res *types.WebhookReqBody) {
 		handleCommands(res)
 		return
 	}
+	chat, chatErr := db.GetChatByChatID(res.Message.Chat.ID)
+	if chatErr != nil {
+		fmt.Println("нет такого чата")
+		return
+	}
+	if !chat.Started {
+		fmt.Println("режим игры не включен")
+		return
+	}
 
 	city, err :=db.GetCityByName(res.Message.Text)
 	if err!=nil {
@@ -58,8 +67,27 @@ func handleCommands(res *types.WebhookReqBody) {
 		case "/help",("/help@"+configs.BOT_NAME) :
 			sendMessage(res.Message.Chat.ID, HELP_MESSAGE)
 		case "/start",("/start@"+configs.BOT_NAME) :
-			sendMessage(res.Message.Chat.ID, "start")
+			chat, chatErr := db.GetChatByChatID(res.Message.Chat.ID)
+			if chatErr != nil {
+				var model types.ChatModel
+				model.ChatID = res.Message.Chat.ID
+				model.LastCity = ""
+				model.Started = true
+				db.AddChat(model)
+				sendMessage(res.Message.Chat.ID, "Новый чат добавлен")
+			} else {
+				chat.Started = true
+				db.UpdateChatStatus(chat)
+				sendMessage(res.Message.Chat.ID, "режим игры включен")
+			}
 		case "/stop",("/stop@"+configs.BOT_NAME) :
+			chat, err := db.GetChatByChatID(res.Message.Chat.ID)
+			if err != nil {
+				fmt.Println("нет такого чата")
+				return
+			}
+			chat.Started = false
+			db.UpdateChatStatus(chat)
 			sendMessage(res.Message.Chat.ID, "stop")
 		case "/info",("/info@"+configs.BOT_NAME) :
 			city, err :=db.GetCityByName(param)

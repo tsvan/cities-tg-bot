@@ -38,3 +38,10 @@ type CityModel struct {
 	Lng string
 	Population int64
 }
+
+type ChatModel struct {
+	ID int64
+	ChatID int64
+	LastCity string
+	Started bool
+}

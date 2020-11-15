@@ -34,7 +34,16 @@ func CreateTables() {
 			create_date timestamp NOT NULL,
 			send_date timestamp NOT NULL,
 			CONSTRAINT messages_pkey PRIMARY KEY (id)
-		)
+		);
+
+		CREATE TABLE IF NOT EXISTS public.chats(
+			id SERIAL,
+			chat_id bigint NOT NULL,
+			lastCity text,
+			started boolean NOT NULL,
+			CONSTRAINT chats_pkey PRIMARY KEY (id)
+		);
+
 	`)
 	if err != nil {
 		panic(err)
@@ -48,6 +57,30 @@ func AddMessage(model types.MessageModel) {
 	query := fmt.Sprintf(`INSERT INTO public.messages(
 		message, chat_id, create_date, send_date)
 	   VALUES ('%s', '%d', '%s', '%s');`, model.Message, model.ChatID, model.CreateDate, model.SendDate)
+	db := Connect()
+	result, err := db.Exec(query)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(result)
+	defer db.Close()
+}
+
+func AddChat(model types.ChatModel) {
+	query := fmt.Sprintf(`INSERT INTO public.chats(
+		chat_id, lastcity, started)
+	   VALUES ('%d', '%s', '%t');`, model.ChatID, model.LastCity, model.Started)
+	db := Connect()
+	result, err := db.Exec(query)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(result)
+	defer db.Close()
+}
+
+func UpdateChatStatus(model types.ChatModel) {
+	query := fmt.Sprintf(`UPDATE public.chats SET started = %t WHERE chat_id = %d;`,model.Started, model.ChatID)
 	db := Connect()
 	result, err := db.Exec(query)
 	if err != nil {
@@ -118,4 +151,22 @@ func GetRandomCitiesByLetter(letter string) (types.CityModel, error) {
 	defer db.Close()
 	return city, nil
 
+}
+
+func GetChatByChatID(chatID int64) (types.ChatModel, error) {
+	db := Connect()
+	query := fmt.Sprintf("select * from public.chats WHERE chat_id=%d", chatID)
+	fmt.Println(query)
+	row := db.QueryRow(query)
+	model := types.ChatModel{}
+
+	err := row.Scan(&model.ID, &model.ChatID, &model.LastCity, &model.Started)
+	if err != nil {
+		fmt.Println("chat not found")
+		return model, err
+	}
+	fmt.Println(model.ID, model.ChatID)
+	
+	defer db.Close()
+	return model, nil
 }
