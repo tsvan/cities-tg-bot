@@ -71,7 +71,7 @@ func handleCommands(res *types.WebhookReqBody) {
 			if chatErr != nil {
 				var model types.ChatModel
 				model.ChatID = res.Message.Chat.ID
-				model.LastCity = ""
+				model.Cities = []string{"Москва", "Анапа", "queues"}
 				model.Started = true
 				db.AddChat(model)
 				sendMessage(res.Message.Chat.ID, "Новый чат добавлен")

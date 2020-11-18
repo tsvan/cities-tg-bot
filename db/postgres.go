@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
 )
 
 //Connect postgres, return db object
@@ -39,7 +39,7 @@ func CreateTables() {
 		CREATE TABLE IF NOT EXISTS public.chats(
 			id SERIAL,
 			chat_id bigint NOT NULL,
-			lastCity text,
+			cities text[] NOT NULL DEFAULT '{}'::text[],
 			started boolean NOT NULL,
 			CONSTRAINT chats_pkey PRIMARY KEY (id)
 		);
@@ -67,11 +67,11 @@ func AddMessage(model types.MessageModel) {
 }
 
 func AddChat(model types.ChatModel) {
-	query := fmt.Sprintf(`INSERT INTO public.chats(
-		chat_id, lastcity, started)
-	   VALUES ('%d', '%s', '%t');`, model.ChatID, model.LastCity, model.Started)
+	query := `INSERT INTO public.chats(
+		chat_id, cities, started)
+	   VALUES ($1, $2, $3);`
 	db := Connect()
-	result, err := db.Exec(query)
+	result, err := db.Exec(query, model.ChatID, pq.Array(model.Cities), model.Started)
 	if err != nil {
 		panic(err)
 	}
@@ -160,12 +160,12 @@ func GetChatByChatID(chatID int64) (types.ChatModel, error) {
 	row := db.QueryRow(query)
 	model := types.ChatModel{}
 
-	err := row.Scan(&model.ID, &model.ChatID, &model.LastCity, &model.Started)
+	err := row.Scan(&model.ID, &model.ChatID, pq.Array(&model.Cities), &model.Started)
 	if err != nil {
 		fmt.Println("chat not found")
 		return model, err
 	}
-	fmt.Println(model.ID, model.ChatID)
+	fmt.Println(model.ID, model.ChatID, model.Cities)
 	
 	defer db.Close()
 	return model, nil
