@@ -60,7 +60,7 @@ func HandleMessage(res *types.WebhookReqBody) {
 		randomCity, err := db.GetRandomCitiesByLetter(getLetter(city.City))
 		if err == nil  {
 			sendMessage(res.Message.Chat.ID, randomCity.City)
-			chat.Cities = append(chat.Cities, city.City, randomCity.City)
+			chat.Cities = setCitiesList(chat.Cities, city.City, randomCity.City)
 			db.UpdateChatCities(chat)
 		} else {
 			sendMessage(res.Message.Chat.ID, NO_CITIES_FOUND_MESSAGE)
@@ -182,4 +182,12 @@ func cityCheck(city string, usedCities []string) bool {
 		return true
 	}
 	return false
+}
+
+func setCitiesList(cities []string, userCity string, randomCity string) []string {
+	if(len(cities) > 6 ){
+		cities = cities[2:]
+	}
+	result := append(cities, userCity, randomCity)
+	return result
 }
