@@ -22,7 +22,8 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
+
 	db.CreateTables()
-	db.GetMessagesToSend()
+	defer db.CloseDB()
 	http.ListenAndServe(":8000", http.HandlerFunc(Handler))
 }

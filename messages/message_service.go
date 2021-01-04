@@ -51,13 +51,14 @@ func HandleMessage(res *types.WebhookReqBody) {
 		if(!cityCheck(city.City, chat.Cities)) {
 			fmt.Println("нужно назвать город на букву -")
 			sendMessage(res.Message.Chat.ID, "нужно назвать город на букву -")
+			return
 		}
 		if(stringInSlice(city.City, chat.Cities)) {
 			fmt.Println("Такой город уже был")
 			sendMessage(res.Message.Chat.ID, "Такой город уже был")
 			return
 		}
-		randomCity, err := db.GetRandomCitiesByLetter(getLetter(city.City))
+		randomCity, err := db.GetRandomCityByLetter(getLetter(city.City))
 		if err == nil  {
 			sendMessage(res.Message.Chat.ID, randomCity.City)
 			chat.Cities = setCitiesList(chat.Cities, city.City, randomCity.City)
