@@ -12,7 +12,7 @@ func AddChat(model types.ChatModel) {
 	query := `INSERT INTO public.chats(
 		chat_id, cities, started)
 	   VALUES ($1, $2, $3);`
-	result, err := database.Exec(query, model.ChatID, pq.Array(model.Cities), model.Started)
+	_, err := database.Exec(query, model.ChatID, pq.Array(model.Cities), model.Started)
 	if err != nil {
 		panic(err)
 	}
@@ -21,7 +21,7 @@ func AddChat(model types.ChatModel) {
 //UpdateChatStatus - update game status, unset used cities
 func UpdateChatStatus(model types.ChatModel) {
 	query := `UPDATE public.chats SET started = $1 , cities = $2 WHERE chat_id = $3;`
-	result, err := database.Exec(query, model.Started, pq.Array([]string{}), model.ChatID)
+	_, err := database.Exec(query, model.Started, pq.Array([]string{}), model.ChatID)
 	if err != nil {
 		panic(err)
 	}
@@ -30,7 +30,7 @@ func UpdateChatStatus(model types.ChatModel) {
 //UpdateChatCities - update cities used in current game
 func UpdateChatCities(model types.ChatModel) {
 	query := `UPDATE public.chats SET cities = $1  WHERE chat_id = $2;`
-	result, err := database.Exec(query, pq.Array(model.Cities), model.ChatID)
+	_, err := database.Exec(query, pq.Array(model.Cities), model.ChatID)
 	if err != nil {
 		panic(err)
 	}
