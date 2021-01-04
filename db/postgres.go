@@ -80,9 +80,20 @@ func AddChat(model types.ChatModel) {
 }
 
 func UpdateChatStatus(model types.ChatModel) {
-	query := fmt.Sprintf(`UPDATE public.chats SET started = %t WHERE chat_id = %d;`,model.Started, model.ChatID)
+	query := `UPDATE public.chats SET started = $1 , cities = $2 WHERE chat_id = $3;`
 	db := Connect()
-	result, err := db.Exec(query)
+	result, err := db.Exec(query, model.Started, pq.Array([]string{}), model.ChatID)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(result)
+	defer db.Close()
+}
+
+func UpdateChatCities(model types.ChatModel) {
+	query := `UPDATE public.chats SET cities = $1  WHERE chat_id = $2;`
+	db := Connect()
+	result, err := db.Exec(query, pq.Array(model.Cities), model.ChatID)
 	if err != nil {
 		panic(err)
 	}

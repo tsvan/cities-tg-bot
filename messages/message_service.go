@@ -48,9 +48,20 @@ func HandleMessage(res *types.WebhookReqBody) {
 		fmt.Println("нету города такого")
 		sendMessage(res.Message.Chat.ID, NO_CITY_MESSAGE)
 	} else {
+		if(!cityCheck(city.City, chat.Cities)) {
+			fmt.Println("нужно назвать город на букву -")
+			sendMessage(res.Message.Chat.ID, "нужно назвать город на букву -")
+		}
+		if(stringInSlice(city.City, chat.Cities)) {
+			fmt.Println("Такой город уже был")
+			sendMessage(res.Message.Chat.ID, "Такой город уже был")
+			return
+		}
 		randomCity, err := db.GetRandomCitiesByLetter(getLetter(city.City))
 		if err == nil  {
 			sendMessage(res.Message.Chat.ID, randomCity.City)
+			chat.Cities = append(chat.Cities, city.City, randomCity.City)
+			db.UpdateChatCities(chat)
 		} else {
 			sendMessage(res.Message.Chat.ID, NO_CITIES_FOUND_MESSAGE)
 		}
@@ -71,7 +82,8 @@ func handleCommands(res *types.WebhookReqBody) {
 			if chatErr != nil {
 				var model types.ChatModel
 				model.ChatID = res.Message.Chat.ID
-				model.Cities = []string{"Москва", "Анапа", "queues"}
+				//model.Cities = []string{"Москва", "Анапа", "queues"}
+				model.Cities = []string{}
 				model.Started = true
 				db.AddChat(model)
 				sendMessage(res.Message.Chat.ID, "Новый чат добавлен")
@@ -115,6 +127,15 @@ func parseMessage(res *types.WebhookReqBody) types.MessageModel {
 	return model
 }
 
+func stringInSlice(a string, list []string) bool {
+    for _, b := range list {
+        if b == a {
+            return true
+        }
+    }
+    return false
+}
+
 func sendMessage(chatID int64, text string) error {
 	// Create the request body struct
 	reqBody := &types.SendMessageReqBody{
@@ -146,4 +167,19 @@ func getLetter(word string) string {
 	r := []rune(word)
 	letter:= string(r[len(r)-1:])
 	return letter
+}
+
+func cityCheck(city string, usedCities []string) bool {
+	if(len(usedCities) < 1) {
+		return true
+	}
+	lastCity := usedCities[len(usedCities)-1]
+	r := []rune(strings.ToLower(city))
+	firstletter:= string(r[0])
+	fmt.Println(firstletter)
+	fmt.Println(getLetter(lastCity))
+	if(getLetter(lastCity) == firstletter) {
+		return true
+	}
+	return false
 }
