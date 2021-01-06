@@ -25,5 +25,5 @@ func main() {
 
 	db.CreateTables()
 	defer db.CloseDB()
-	http.ListenAndServe(":8000", http.HandlerFunc(Handler))
+	http.ListenAndServeTLS(":8443","certs/cert.crt","certs/key.key", http.HandlerFunc(Handler))
 }
