@@ -22,8 +22,8 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
-
 	db.CreateTables()
+	//db.InsertGeoTable()
 	defer db.CloseDB()
 	http.ListenAndServeTLS(":8443","certs/cert.crt","certs/key.key", http.HandlerFunc(Handler))
 }
