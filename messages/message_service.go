@@ -49,7 +49,7 @@ func HandleMessage(res *types.WebhookReqBody) {
 		}
 		randomCity, err := db.GetRandomCityByLetter(getLastLetter(city.City))
 		if err == nil {
-			sendMessage(res.Message.Chat.ID, randomCity.City)
+			sendMessage(res.Message.Chat.ID, ("<b>" + randomCity.City + "</b> " + "<i>(Страна - " + randomCity.Country + ")</i>"))
 			chat.Cities = setCitiesList(chat.Cities, city.City, randomCity.City)
 			db.UpdateChatCities(chat)
 		} else {
@@ -95,8 +95,9 @@ func handleCommands(res *types.WebhookReqBody) {
 		if err != nil {
 			sendMessage(res.Message.Chat.ID, types.InfoNotFound)
 		} else {
+			link := GetWikiLink(city.City)
 			sendMessage(res.Message.Chat.ID,
-				fmt.Sprintf("Страна: %s.\nРегион: %s.\nНаселение: %d.", city.Country, city.Region, city.Population))
+				fmt.Sprintf("<b>Страна:</b> %s.\n<b>Регион:</b> %s.\n<b>Население:</b> %d.\n%s", city.Country, city.Region, city.Population,link))
 		}
 	default:
 		sendMessage(res.Message.Chat.ID, types.CommandNotFound)
@@ -110,6 +111,7 @@ func sendMessage(chatID int64, text string) error {
 	reqBody := &types.SendMessageReqBody{
 		ChatID: chatID,
 		Text:   text,
+		ParseMode: "HTML",
 	}
 	// Create the JSON body from the struct
 	reqBytes, err := json.Marshal(reqBody)

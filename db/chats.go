@@ -39,13 +39,11 @@ func UpdateChatCities(model types.ChatModel) {
 //GetChatByChatID - get chat model by chat id
 func GetChatByChatID(chatID int64) (types.ChatModel, error) {
 	query := fmt.Sprintf("select * from public.chats WHERE chat_id=%d", chatID)
-	fmt.Println(query)
 	row := database.QueryRow(query)
 	model := types.ChatModel{}
 
 	err := row.Scan(&model.ID, &model.ChatID, pq.Array(&model.Cities), &model.Started)
 	if err != nil {
-		fmt.Println("chat not found")
 		return model, err
 	}
 
